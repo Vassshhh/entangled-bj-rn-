@@ -2,9 +2,7 @@ import * as kokomi from "kokomi.js";
 import * as THREE from "three";
 
 import World from "./World/World";
-
 import Debug from "./Debug";
-
 import resources from "./resources";
 
 export default class Experience extends kokomi.Base {
@@ -21,11 +19,7 @@ export default class Experience extends kokomi.Base {
 
     this.am = new kokomi.AssetManager(this, resources);
 
-    // this.camera.position.set(0, 0, 5.6);
-    // this.camera.fov = 30;
-    // this.camera.updateProjectionMatrix();
-    // new kokomi.OrbitControls(this);
-
+    // Setup orthographic camera
     const camera = new THREE.OrthographicCamera(
       0,
       window.innerWidth,
@@ -36,13 +30,52 @@ export default class Experience extends kokomi.Base {
     );
     camera.position.z = 2.5;
     this.camera = camera;
+
     window.addEventListener("resize", () => {
       this.camera.right = window.innerWidth;
       this.camera.bottom = window.innerHeight;
       this.camera.updateProjectionMatrix();
     });
+
     new kokomi.OrbitControls(this);
 
+    // Inisialisasi World
     this.world = new World(this);
+
+    // =======================
+    // 🔌 WEBSOCKET SECTION 🔌
+    // =======================
+    this.socket = new WebSocket("ws://localhost:8080");
+
+    this.socket.onopen = () => {
+      console.log("✅ WebSocket terhubung!");
+    };
+
+    this.socket.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+
+      // Kirim ke World untuk diproses lebih lanjut
+      if (this.world && typeof this.world.onSocketData === "function") {
+        this.world.onSocketData(data);
+      }
+    };
+
+    this.socket.onerror = (e) => {
+      console.error("❌ WebSocket error:", e);
+    };
+
+    // Kirim data ke server saat mouse digerakkan
+    window.addEventListener("mousemove", (e) => {
+      const strength = e.clientX / window.innerWidth;
+
+      if (this.socket.readyState === WebSocket.OPEN) {
+        this.socket.send(
+          JSON.stringify({
+            type: "wave",
+            strength,
+          })
+        );
+      }
+    });
   }
 }
