@@ -45,7 +45,12 @@ export default class Experience extends kokomi.Base {
     // =======================
     // 🔌 WEBSOCKET SECTION 🔌
     // =======================
-    this.socket = new WebSocket("ws://localhost:8080");
+    // WebSocket dinamis (untuk local / csb.app)
+    const protocol = location.protocol === "https:" ? "wss" : "ws";
+    const hostname = location.hostname;
+    this.socket = new WebSocket(
+      `${protocol}://${hostname.replace(".csb.app", "-8080.csb.app")}`
+    );
 
     this.socket.onopen = () => {
       console.log("✅ WebSocket terhubung!");
@@ -53,8 +58,6 @@ export default class Experience extends kokomi.Base {
 
     this.socket.onmessage = (e) => {
       const data = JSON.parse(e.data);
-
-      // Kirim ke World untuk diproses lebih lanjut
       if (this.world && typeof this.world.onSocketData === "function") {
         this.world.onSocketData(data);
       }
@@ -64,10 +67,8 @@ export default class Experience extends kokomi.Base {
       console.error("❌ WebSocket error:", e);
     };
 
-    // Kirim data ke server saat mouse digerakkan
     window.addEventListener("mousemove", (e) => {
       const strength = e.clientX / window.innerWidth;
-
       if (this.socket.readyState === WebSocket.OPEN) {
         this.socket.send(
           JSON.stringify({
