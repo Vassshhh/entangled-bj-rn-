@@ -45,7 +45,7 @@ export default class World extends kokomi.Component {
     let sceneOffsetTarget = { x: 0, y: 0 };
     let sceneOffset = { x: 0, y: 0 };
 
-    const colors = ["#00ff00", "#ff0000"];
+    const colors = ["#054df5", "#f5c105"];
 
     let today = new Date();
     today.setHours(0, 0, 0, 0);
